@@ -39,7 +39,7 @@ segments = seeded_region_growing(img, seeds)
 # output
 
 Segmented Image with:
-  labels map: 240×360 Array{Int64,2}
+  labels map: 240×360 Matrix{Int64}
   number of labels: 3
 ```
 
@@ -61,7 +61,7 @@ julia> length(segment_labels(segments))
 3
 
 julia> segment_mean(segments)
-Dict{Int64,RGB{Float64}} with 3 entries:
+Dict{Int64, RGB{Float64}} with 3 entries:
   2 => RGB{Float64}(0.793598,0.839543,0.932374)
   3 => RGB{Float64}(0.329863,0.35779,0.237457)
   1 => RGB{Float64}(0.0646509,0.0587034,0.0743471)
@@ -91,7 +91,7 @@ segments = seeded_region_growing(img, seeds)
 DocTestSetup = nothing
 ```
 
-Now let's segment this image using felzenszwalb algorithm. `felzenswalb` only needs a single parameter `k` which controls the size of segments. Larger `k` will result in bigger segments. Using `k=5` to `k=500` generally gives good results.
+Now let's segment this image using felzenszwalb algorithm. `felzenszwalb` only needs a single parameter `k` which controls the size of segments. Larger `k` will result in bigger segments. Using `k=5` to `k=500` generally gives good results.
 
 ```jldoctest
 julia> using Images, ImageSegmentation
@@ -100,12 +100,12 @@ julia> img = load("src/pkgs/segmentation/assets/horse.jpg");
 
 julia> segments = felzenszwalb(img, 100)
 Segmented Image with:
-  labels map: 240×360 Array{Int64,2}
+  labels map: 240×360 Matrix{Int64}
   number of labels: 43
 
 julia> segments = felzenszwalb(img, 10)  #smaller segments but noisy segmentation
 Segmented Image with:
-  labels map: 240×360 Array{Int64,2}
+  labels map: 240×360 Matrix{Int64}
   number of labels: 312
 ```
 
@@ -141,7 +141,7 @@ julia> img = fill(1, 4, 4);
 julia> img[1:2,1:2] .= 2;
 
 julia> img
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  2  2  1  1
  2  2  1  1
  1  1  1  1
@@ -150,14 +150,14 @@ julia> img
 julia> seg = fast_scanning(img, 0.5);
 
 julia> labels_map(seg) # returns the assigned labels map
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  3  3
  1  1  3  3
  3  3  3  3
  3  3  3  3
 
 julia> segment_labels(seg) # returns a list of all assigned labels
-2-element Array{Int64,1}:
+2-element Vector{Int64}:
  1
  3
 
@@ -193,7 +193,7 @@ julia> seeds = [(CartesianIndex(104, 48), 1), (CartesianIndex( 49, 40), 1),
 
 julia> seg = seeded_region_growing(img, seeds)
 Segmented Image with:
-  labels map: 183×275 Array{Int64,2}
+  labels map: 183×275 Matrix{Int64}
   number of labels: 2
 ```
 **Original** [(source)](https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Davidraju_Worm_Snake.jpg/275px-Davidraju_Worm_Snake.jpg):
@@ -212,20 +212,20 @@ with region ``A_1`` containing a single pixel of the image. Let an intermediate 
 of the algorithm consist of a set of identified regions ``A_1, A_2, ..., A_n``.
 Let ``T`` be the set of all unallocated pixels which borders at least one of these
 regions. The growing process involves selecting a point ``z \in T`` and region ``A_j``
-where ``j \in [ \, 1,n ] \,`` such that
+where ``j \in [ 1,n ] `` such that
 
 ```math
-\delta ( \, z, A_j ) \, = min_{x \in T, k \in [ \, 1,n ] \, } \{ \delta ( \, x, A_k ) \, \}
+\delta(z, A_j)= \min_{x \in T, k \in [ 1,n ] } \{ \delta(x, A_k)\}
 ```
-where `` \delta ( \, x, A_i ) \, = | img ( \, x ) \, - mean_{y \in A_i} [ \, img ( \, y ) \, ] \, |``
+where `` \delta(x, A_i)= | \operatorname{img}(x) - \operatorname{mean}_{y \in A_i} [ \operatorname{img}(y) ] |``
 
-If ``\delta ( \, z, A_j ) \,`` is less than `threshold` then the pixel `z` is added to ``A_j``.
+If ``\delta(z, A_j)`` is less than `threshold` then the pixel `z` is added to ``A_j``.
 Otherwise we choose the most similar region ``\alpha`` such that
 
 ```math
-\alpha = argmin_{A_k} \{ \delta ( \, z, A_k) \, \}
+\alpha = \argmin_{A_k} \{ \delta(z, A_k) \}
 ```
-If ``\delta ( \, z, \alpha ) \,`` is less than `threshold` then the pixel `z` is added to ``\alpha``.
+If ``\delta(z, \alpha)`` is less than `threshold` then the pixel `z` is added to ``\alpha``.
 If neither of the two conditions is satisfied, then the pixel is assigned a new region ``A_{n+1}``.
 After assignment of ``z``, we update the statistic of the assigned region. The algorithm halts when
 all the pixels have been assigned to some region.
@@ -241,19 +241,19 @@ julia> img = load("src/pkgs/segmentation/assets/tree.jpg");
 
 julia> seg = unseeded_region_growing(img, 0.05) # here 0.05 is the threshold
 Segmented Image with:
-  labels map: 320×480 Array{Int64,2}
+  labels map: 320×480 Matrix{Int64}
   number of labels: 698
 ```
 
-| Threshold | Output | Compression percentage|
-| ------------- | ----------| -------------------------|
+| Threshold | Output | Compression percentage |
+| :-------: | :----: | :--------------------: |
 | Original [(source)](http://maxpixel.freegreatpicture.com/static/photo/1x/Plant-Wood-Tissue-Leaves-Nature-Green-Tree-2387626.jpg)  | ![tree](assets/tree.jpg) | 0 % |
 | 0.05 | ![tree_seg1](assets/tree_seg1.jpg) | 60.63% |
 | 0.1 | ![tree_seg2](assets/tree_seg2.jpg) | 71.27% |
 | 0.2 | ![tree_seg3](assets/tree_seg3.jpg) | 79.96% |
 
 
-#### Felzenswalb's Region Merging Algorithm
+#### Felzenszwalb's Region Merging Algorithm
 
 This algorithm operates on a Region Adjacency Graph (RAG). Each pixel/region is a node in the graph and adjacent pixels/regions have edges between them with weight measuring the dissimilarity between pixels/regions. The algorithm repeatedly merges similar regions till we get the final segmentation. It efficiently computes oversegmented “superpixels” in an image. The function can be directly called with an image (the implementation internally creates a RAG of the image first and then proceeds).
 
@@ -266,7 +266,7 @@ julia> img = Gray.(testimage("house"));
 
 julia> segments = felzenszwalb(img, 300, 100) # k=300 (the merging threshold), min_size = 100 (smallest number of pixels/region)
 Segmented Image with:
-  labels map: 512×512 Array{Int64,2}
+  labels map: 512×512 Matrix{Int64}
   number of labels: 11
 ```
 
@@ -296,7 +296,7 @@ julia> img = imresize(img, (128, 128));
 
 julia> segments = meanshift(img, 16, 8/255) # parameters are smoothing radii: spatial=16, intensity-wise=8/255
 Segmented Image with:
-  labels map: 128×128 Array{Int64,2}
+  labels map: 128×128 Matrix{Int64}
   number of labels: 44
 ```
 ![img1](assets/small_house.jpg) ![img2](assets/meanshift.jpg)
@@ -309,10 +309,10 @@ and assigns it to a new segment ``A_1``. Label count `lc` is assigned 1. Then it
 of the image and for every pixel, it computes the difference measure `diff_fn`
 between the pixel and its left neighbor, say ``\delta_{l}`` and between the pixel and
 its top neighbor, say ``\delta_{t}``. Four cases arise:
-1) ``\delta_{l}`` >= `threshold` and ``\delta_{t}`` < `threshold` : We can say that the point has similar intensity to that its top neighbor. Hence, we assign the point to the segment that contains its top neighbor.
-2) ``\delta_{l}`` < `threshold` and ``\delta_{t}`` >= `threshold` : Similar to case 1, we assign the point to the segment that contains its left neighbor.
-3) ``\delta_{l}`` >= `threshold` and ``\delta_{t}`` >= `threshold` : Point is significantly different from its top and left neighbors and is assigned a new label ``A_{lc+1}`` and `lc` is incremented.
-4) ``\delta_{l}`` < `threshold` and ``\delta_{t}`` < `threshold` : In this case, we merge the top and left semgents together and assign the point under consideration to this merged segment.
+1) ``\delta_{l} \ge`` `threshold` and ``\delta_{t} <``   `threshold` : We can say that the point has similar intensity to that its top neighbor. Hence, we assign the point to the segment that contains its top neighbor.
+2) ``\delta_{l} <``   `threshold` and ``\delta_{t} \ge`` `threshold` : Similar to case 1, we assign the point to the segment that contains its left neighbor.
+3) ``\delta_{l} \ge`` `threshold` and ``\delta_{t} \ge`` `threshold` : Point is significantly different from its top and left neighbors and is assigned a new label ``A_{\text{lc}+1}`` and `lc` is incremented.
+4) ``\delta_{l} <``   `threshold` and ``\delta_{t} <``   `threshold` : In this case, we merge the top and left segments together and assign the point under consideration to this merged segment.
 
 This algorithm segments the image in just two passes (one for segmenting and other for
 merging), hence it is very fast and can be used in real time applications.
@@ -328,12 +328,12 @@ julia> img = testimage("camera");
 
 julia> seg = fast_scanning(img, 0.1)  # threshold = 0.1
 Segmented Image with:
-  labels map: 512×512 Array{Int64,2}
+  labels map: 512×512 Matrix{Int64}
   number of labels: 2538
 
 julia> seg = prune_segments(seg, i->(segment_pixel_count(seg,i)<50), (i,j)->(-segment_pixel_count(seg,j)))
 Segmented Image with:
-  labels map: 512×512 Array{Int64,2}
+  labels map: 512×512 Matrix{Int64}
   number of labels: 65
 ```
 
@@ -353,11 +353,11 @@ image is split into two across every dimension and the smaller parts are
 segmented recursively. This procedure generates a region tree which can
 be used to create a segmented image.
 
-**Time Complexity:** ``O(n*log(n))`` where ``n`` is the number of pixels
+**Time Complexity:** ``O(n \log(n))`` where ``n`` is the number of pixels
 
 ###### Demo
 
-```jldoctest
+```julia
 julia> using TestImages, ImageSegmentation
 
 julia> img = testimage("lena_gray");
@@ -370,7 +370,7 @@ homogeneous (generic function with 1 method)
 
 julia> seg = region_splitting(img, homogeneous)
 Segmented Image with:
-  labels map: 256×256 Array{Int64,2}
+  labels map: 256×256 Matrix{Int64}
   number of labels: 8836
 ```
 
@@ -396,8 +396,8 @@ for medical imaging like in the soft segmentation of brain tissue model.
 Note that both Fuzzy C-means and K-means have an element of randomness, and it's possible
 to get results that vary considerably from one run to the next.
 
-**Time Complexity:** ``O(n*C^2*iter)`` where ``n`` is the number of pixels, ``C`` is
-number of clusters and ``iter`` is the number of iterations.
+**Time Complexity:** ``O(n \cdot C^2 \cdot \text{iter})`` where ``n`` is the number of pixels, ``C`` is
+number of clusters and ``\text{iter}`` is the number of iterations.
 
 ###### Demo
 
@@ -425,7 +425,7 @@ See the documentation in [Clustering.jl](https://github.com/JuliaStats/Clusterin
 **Output with pixel intensity = cluster center intensity * membership of pixel in that class**
 
 | Magenta petals | Greenish Leaves | White background |
-|----------------|-----------------|------------------|
+| :------------: | :-------------: | :--------------: |
 | ![SegmentedImage1](assets/flower_s1.jpg) |![SegmentedImage2](assets/flower_s2.jpg) | ![SegmentedImage3](assets/flower_s3.jpg) |
 
 #### Watershed
@@ -449,7 +449,7 @@ julia> markers = label_components(dist .< -15);
 
 julia> segments = watershed(dist, markers)
 Segmented Image with:
-  labels map: 312×252 Array{Int64,2}
+  labels map: 312×252 Matrix{Int64}
   number of labels: 24
 
 julia> imshow(map(i->get_random_color(i), labels_map(segments)) .* (1 .-bw))       #shows segmented image
@@ -516,7 +516,7 @@ julia> function homogeneous(img)
 homogeneous (generic function with 1 method)
 
 julia> t = region_tree(img, homogeneous)        # `img` is an image
-Cell: RegionTrees.HyperRectangle{2,Float64}([1.0, 1.0], [300.0, 300.0])
+Cell: RegionTrees.HyperRectangle{2, Float64}([1.0, 1.0], [300.0, 300.0])
 ```
 
 For more information regarding `RegionTrees`, see [this](https://github.com/rdeits/RegionTrees.jl#regiontreesjl-quadtrees-octrees-and-their-n-dimensional-cousins).
@@ -546,14 +546,14 @@ julia> img[1:2,3:4] .= 3;
 julia> seg = fast_scanning(img, 0.5);
 
 julia> labels_map(seg)
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  3  3
  1  1  3  3
  2  2  2  2
  2  2  2  2
 
 julia> seg.image_indexmap
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  3  3
  1  1  3  3
  2  2  2  2
@@ -564,7 +564,7 @@ julia> diff_fn(rem_label, neigh_label) = segment_pixel_count(seg,rem_label) - se
 julia> new_seg = prune_segments(seg, [3], diff_fn);
 
 julia> labels_map(new_seg)
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  2  2
  1  1  2  2
  2  2  2  2
@@ -583,7 +583,7 @@ neighbouring segment having least `diff_fn` value.
 
 ```jldoctest prune
 julia> seg.image_indexmap
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  3  3
  1  1  3  3
  2  2  2  2
@@ -594,7 +594,7 @@ julia> diff_fn(rem_label, neigh_label) = segment_pixel_count(seg,rem_label) - se
 julia> rem_segment!(seg, 3, diff_fn);
 
 julia> labels_map(new_seg)
-4×4 Array{Int64,2}:
+4×4 Matrix{Int64}:
  1  1  2  2
  1  1  2  2
  2  2  2  2
